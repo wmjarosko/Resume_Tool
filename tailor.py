@@ -13,10 +13,9 @@ DB_DIR = "./db"
 MODEL_NAME = "mistral" 
 JD_FILE = "job_description.txt"
 
-def save_as_docx(text_content, filename="Tailored_Resume.docx", is_ats=False):
+def save_as_docx(text_content, filename="Tailored_Resume.docx"):
     """
     Converts LLM output into a Word Document.
-    If is_ats=True, it uses a simplified, single-column standard layout.
     """
     doc = Document()
     
@@ -34,14 +33,7 @@ def save_as_docx(text_content, filename="Tailored_Resume.docx", is_ats=False):
         if clean_line.startswith('#'):
             level = clean_line.count('#')
             content = clean_line.replace('#', '').strip()
-            # ATS version uses bold text rather than fancy Word Header styles
-            if is_ats:
-                p = doc.add_paragraph()
-                run = p.add_run(content.upper())
-                run.bold = True
-                p.style = doc.styles['Normal']
-            else:
-                doc.add_heading(content, level=min(level, 9))
+            doc.add_heading(content, level=min(level, 9))
         elif clean_line.startswith('*') or clean_line.startswith('-'):
             content = clean_line[1:].strip()
             doc.add_paragraph(content, style='List Bullet')
@@ -49,7 +41,15 @@ def save_as_docx(text_content, filename="Tailored_Resume.docx", is_ats=False):
             doc.add_paragraph(clean_line)
 
     doc.save(filename)
-    print(f"{'ATS-Optimized' if is_ats else 'Professional'} DOCX created: {os.path.abspath(filename)}")
+    print(f"Professional DOCX created: {os.path.abspath(filename)}")
+
+def save_as_markdown(text_content, filename="Tailored_Resume_ATS.md"):
+    """
+    Saves LLM output into a Markdown file.
+    """
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(text_content)
+    print(f"ATS-Optimized Markdown created: {os.path.abspath(filename)}")
 
 def get_tailored_resume(job_description):
     if not os.path.exists(DB_DIR):
@@ -112,9 +112,9 @@ if __name__ == "__main__":
         result = get_tailored_resume(jd_content)
         
         # 1. Save the Professional Version (Best for humans)
-        save_as_docx(result, "Tailored_Resume_Human.docx", is_ats=False)
+        save_as_docx(result, "Tailored_Resume_Human.docx")
         
         # 2. Save the ATS Version (Best for portal uploads)
-        save_as_docx(result, "Tailored_Resume_ATS.docx", is_ats=True)
+        save_as_markdown(result, "Tailored_Resume_ATS.md")
     else:
         print(f"Please create {JD_FILE} first.")
