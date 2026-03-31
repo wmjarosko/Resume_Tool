@@ -61,22 +61,22 @@ def get_tailored_resume(job_description):
     vectorstore = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
 
     prompt_template = """
-    SYSTEM: You are a professional resume writer. Your task is to rewrite a resume to align with a specific Job Description.
+    SYSTEM: You are a Recruitment Optimization Engine. Your goal is to map a Candidate's actual career data to a specific Job Description (JD).
     
-    STRICT RULES:
-    1. Use ONLY the facts provided in the "Retrieved Resume Context" below.
-    2. Do NOT add skills, certifications, or job titles that are not explicitly mentioned in the context.
-    3. Re-phrase and prioritize the user's existing experience to highlight keywords found in the Job Description.
-    4. If the user lacks a specific skill requested in the Job Description, simply omit it.
-    5. Output the result in a clean, professional text format suitable for a DOCX or PDF.
+    STRICT OPERATIONAL RULES:
+    1. SOURCE TRUTH: Use ONLY the information provided in the "Retrieved Context" below. 
+    2. NO EXTRAPOLATION: If a requirement in the JD is not explicitly supported by the Context, DO NOT include it in the output. 
+    3. NO HALLUCINATION: Do not invent projects, dates, or technical proficiencies. If the context is silent on a skill, that skill does not exist for this output.
+    4. STRUCTURE: Organize the output by Professional Experience (Chronological), followed by a Technical Skills alignment.
+    5. FORMATTING: Use professional, concise bullet points. Maintain original Job Titles and Company names as found in the context.
 
     JOB DESCRIPTION:
     {question}
 
-    RETRIEVED RESUME CONTEXT:
+    RETRIEVED CONTEXT (CANDIDATE DATA):
     {context}
 
-    TAILORED RESUME:
+    TAILORED OUTPUT:
     """
 
     PROMPT = PromptTemplate(
@@ -92,10 +92,9 @@ def get_tailored_resume(job_description):
         retriever = vectorstore.as_retriever(
             search_type="mmr",
             search_kwargs={
-                "k": 2,             # Pull enough to cover all roles
-                "fetch_k": 40,       # Initial search pool
-                "lambda_mult": 0.7   # Lowering this (from 0.8) FORCES more diversity
-                             # and prevents it from only pulling one 'era'.
+                "k": 8,              # Increase from 2 to 8 to capture all job blocks
+                "fetch_k": 50,       # Initial pool of 50 candidates
+                "lambda_mult": 0.3   # Lowered from 0.7 to FORCE high diversity between chunks
             }
         ), # <--- The parenthesis for as_retriever must close here
         chain_type_kwargs={"prompt": PROMPT}
