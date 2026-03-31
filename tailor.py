@@ -92,9 +92,9 @@ def get_tailored_resume(job_description):
         retriever = vectorstore.as_retriever(
             search_type="mmr",
             search_kwargs={
-                "k": 8,              # Increase from 2 to 8 to capture all job blocks
+                "k": 15,             # Increased to 15 to capture more detailed job blocks
                 "fetch_k": 50,       # Initial pool of 50 candidates
-                "lambda_mult": 0.3   # Lowered from 0.7 to FORCE high diversity between chunks
+                "lambda_mult": 0.7   # Increased to allow for more semantic similarity and capture details
             }
         ), # <--- The parenthesis for as_retriever must close here
         chain_type_kwargs={"prompt": PROMPT}
